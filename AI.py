@@ -2,6 +2,7 @@ import random
 
 from model import *
 from world import World
+import pandas as pd
 
 
 class AI:
@@ -9,6 +10,7 @@ class AI:
         self.rows = 0
         self.cols = 0
         self.path_for_my_units = None
+        self.table = pd.read_csv('Q_value.csv')
 
     # this function is called in the beginning for deck picking and pre process
     def pick(self, world: World):
