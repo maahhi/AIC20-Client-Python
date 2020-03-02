@@ -11,6 +11,7 @@ class AI:
         self.cols = 0
         self.path_for_my_units = None
         self.table = pd.read_csv('Q_value.csv')
+        self.last_turn_state_action = None  # 0:turn 1:self 2:enemy 3:action
 
     # this function is called in the beginning for deck picking and pre process
     def pick(self, world: World):
@@ -30,10 +31,29 @@ class AI:
         # other pre process
         self.path_for_my_units = world.get_friend().paths_from_player[0]
 
+    def self_state_for_this_path(self,target_path):
+        # The output is an integer that represent binary of self heros in this path
+        return 512
+
+    def enemy_state_for_this_path(self,target_path):
+        # The output is an integer that represent level of enemy in this path
+        # صفر می‌شه زمینی و هوایی ضعیف۱ زمینی قوی هوایی ضیف۲ زمینی ضعیف هوایی قوی۳ هر دو قوی
+        return 3
+
+    def action_set_maker(self,action_unit_list):
+        # The output is a string of set of unit's id
+        return '()'
+
+    def reward_computing(self,target_path):
+        return 5
+
+
     # it is called every turn for doing process during the game
     def turn(self, world: World):
-        Competition = True
-        print("turn started:", world.get_current_turn())
+        Competition = False
+        current_turn = world.get_current_turn()
+        print("turn started:", current_turn)
+
         if Competition:
             myself = world.get_me()
             max_ap = world.get_game_constants().max_ap
@@ -74,7 +94,49 @@ class AI:
                 world.upgrade_unit_damage(unit=unit)
                 world.upgrade_unit_range(unit=unit)
         else: #training
-            pass
+            myself = world.get_me()
+            max_ap = world.get_game_constants().max_ap
+            # play all of hand once your ap reaches maximum. if ap runs out, putUnit doesn't do anything
+            if myself.ap == max_ap:
+                rand_put = random.randint(0,len(myself.hand))
+                action_unit_list = random.sample(range(0,len(myself.hand)-1),rand_put)
+                rand_path = random.randint(0,len(myself.paths_from_player))
+                for i in action_unit_list:
+                    world.put_unit(base_unit=myself.hand[i], path=rand_path)
+                self_state_for_this_path_ = self.self_state_for_this_path(rand_path)
+                enemy_state_for_this_path_ = self.enemy_state_for_this_path(rand_path)
+                action_set_maker_ = self.action_set_maker(action_unit_list)
+                self.last_turn_state_action = [current_turn,
+                                               self_state_for_this_path_,
+                                               enemy_state_for_this_path_,
+                                               action_set_maker_,
+                                               rand_path]
+        # update table
+        if (self.last_turn_state_action is not None) or (self.last_turn_state_action[0] != current_turn) :
+            # an integer that represent binary of self heros in this path
+            self_st = self.last_turn_state_action[1]
+            # an integer that represent level of enemy in this path
+            # صفر می‌شه زمینی و هوایی ضعیف۱ زمینی قوی هوایی ضیف۲ زمینی ضعیف هوایی قوی۳ هر دو قوی
+            enemy_st = self.last_turn_state_action[2]
+            # a string of set of unit's id
+            action = self.last_turn_state_action[3]
+            target_path = self.last_turn_state_action[4]
+            # return an integer for the reward
+            reward = self.reward_computing(target_path)
+
+
+            index_in_table = self.table.loc[(self.table['self'] == self_st) & (self.table['enemy'] == enemy_st)].index[0]
+            last_Q_value = self.table[action][index_in_table]
+            learining_rate = 0.1
+            discount = 0.95
+            max_Q_state = max(self.table.loc[index_in_table][2:])
+            Q_value = last_Q_value + learining_rate * (reward + discount * max_Q_state - last_Q_value)
+            self.table._set_value(index_in_table, action, Q_value)
+
+            print(self.last_turn_state_action[0] == current_turn -1,' turn counter condition')
+            last_turn_state_action = None
+
+
 
     # it is called after the game ended and it does not affect the game.
     # using this function you can access the result of the game.
@@ -82,3 +144,4 @@ class AI:
     def end(self, world: World, scores):
         print("end started!")
         print("My score:", scores[world.get_me().player_id])
+
