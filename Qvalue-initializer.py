@@ -29,5 +29,6 @@ d2.to_csv('Q_value.csv',index=False)
 #d.loc[(d['self']==1) & (d['enemy']==1)]
 d.loc[(d['self']==0) & (d['enemy']==1)]['()'].index[0]
 d._set_value(0,'()',1)
-
+d['()'][0]
+max(d.loc[0][2:])
 d = pandas.read_csv('Q_value.csv')
