@@ -13,6 +13,9 @@ class AI:
         self.table = pd.read_csv('Q_value.csv')
         self.last_turn_state_action = None  # 0:turn 1:self 2:enemy 3:action
         self.write_on_table = World.TRAIN_MODE
+        self.busy_on_put_unity_list = False
+        self.put_unity_list = True
+
 
     # this function is called in the beginning for deck picking and pre process
     def pick(self, world: World):
@@ -46,7 +49,7 @@ class AI:
     def action_set_maker(self,action_unit_list):
         s = set()
         for u in action_unit_list:
-            print('u',u,u.type_id)
+            #print('u',u,u.type_id)
             s.add(u.type_id)
         str_s = str(tuple(sorted(s)))
         #print('str_s',str_s)
@@ -102,9 +105,13 @@ class AI:
                 unit = myself.units[0]
                 world.upgrade_unit_damage(unit=unit)
                 world.upgrade_unit_range(unit=unit)
+
+
         else: #training
+
             # update table
-            if (self.last_turn_state_action is not None): #or (self.last_turn_state_action[0] != current_turn):
+            if (self.last_turn_state_action is not None) and (not self.busy_on_put_unity_list):
+                print('++Update Table++')
                 # an integer that represent binary of self heros in this path
                 self_st = self.last_turn_state_action[1]
                 # an integer that represent level of enemy in this path
@@ -129,20 +136,62 @@ class AI:
 
             myself = world.get_me()
             max_ap = world.get_game_constants().max_ap
-            # play all of hand once your ap reaches maximum. if ap runs out, putUnit doesn't do anything
-            if myself.ap == max_ap:
-                rand_put = random.randint(1,len(myself.hand))
-                print('hand len = ',len(myself.hand),'rand_put :',rand_put)
-                action_unit_list_hand_no = random.sample(range(0,len(myself.hand)),rand_put)
-                print('len(myself.paths_from_player):',len(myself.paths_from_player),'myself.paths_from_player[0]',myself.paths_from_player[0])
-                rand_path_number = random.randint(0,len(myself.paths_from_player)-1)
+            ap_ad= world.get_game_constants().ap_addition
+
+            if self.busy_on_put_unity_list:
+
+                print('++Busy++')
+                this_turn_ap = myself.ap
+                rand_path = self.last_turn_state_action[4]
+                while len(self.put_unity_list) > 0:
+                    if this_turn_ap >= self.put_unity_list[-1].ap:
+                        this_turn_ap -= self.put_unity_list[-1].ap
+                        print('----put unit', self.put_unity_list[-1].type_id)
+                        world.put_unit(base_unit=self.put_unity_list.pop(), path=rand_path)
+                    else:
+                        break
+                if len(self.put_unity_list) == 0 :
+                    self.busy_on_put_unity_list = False
+                    self.put_unity_list = []
+
+            elif myself.ap == max_ap:
+
+                print('++Make new state action++')
+                # which path?
+                rand_path_number = random.randint(0, len(myself.paths_from_player) - 1)
                 rand_path = myself.paths_from_player[rand_path_number]
-                print('rand_path', rand_path, type(rand_path))
-                print('action_unit_list',action_unit_list_hand_no)
+                # print('rand_path', rand_path, type(rand_path))
+
+                # how many unit do you want to put?
+                rand_put = random.randint(1,len(myself.hand))
+                #print('hand len = ',len(myself.hand),'rand_put :',rand_put)
+
+                #which ones?
+                action_unit_list_hand_no = random.sample(range(0,len(myself.hand)),rand_put)
+                #print('len(myself.paths_from_player):',len(myself.paths_from_player),'myself.paths_from_player[0]',myself.paths_from_player[0])
+                #print('action_unit_list',action_unit_list_hand_no)
+
+                #put propose units in a list
                 action_unit_list = []
                 for i in action_unit_list_hand_no:
-                    world.put_unit(base_unit=myself.hand[i], path=rand_path)
                     action_unit_list.append(myself.hand[i])
+                    print('unit HP',myself.hand[i].max_hp)
+
+                #sort them based on HP
+                action_unit_list.sort(key=lambda x: x.max_hp)
+
+                #put them in the path until the ap get very low
+                self.put_unity_list = action_unit_list.copy()
+                this_turn_ap = myself.ap
+                while len(self.put_unity_list)>0:
+                    if this_turn_ap >= self.put_unity_list[-1].ap:
+                        this_turn_ap -= self.put_unity_list[-1].ap
+                        print('----put unit',self.put_unity_list[-1].type_id)
+                        world.put_unit(base_unit=self.put_unity_list.pop(), path=rand_path)
+                    else:
+                        self.busy_on_put_unity_list = True
+                        break
+
                 self_state_for_this_path_ = self.self_state_for_this_path(rand_path)
                 enemy_state_for_this_path_ = self.enemy_state_for_this_path(rand_path)
                 action_set_maker_ = self.action_set_maker(action_unit_list)
@@ -151,7 +200,10 @@ class AI:
                                                enemy_state_for_this_path_,
                                                action_set_maker_,
                                                rand_path]
+                print('print(self.last_turn_state_action)',self.last_turn_state_action)
             else:
+                #
+                print('++Do nothing action++')
                 action_set_maker_ = self.action_set_maker([])
                 rand_path_number = random.randint(0, len(myself.paths_from_player) - 1)
                 rand_path = myself.paths_from_player[rand_path_number]
@@ -162,6 +214,7 @@ class AI:
                                                enemy_state_for_this_path_,
                                                action_set_maker_,
                                                rand_path]
+                print('print(self.last_turn_state_action)',self.last_turn_state_action)
 
 
 
