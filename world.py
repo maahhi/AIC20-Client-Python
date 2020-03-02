@@ -7,6 +7,7 @@ from model import BaseUnit, Map, King, Cell, Path, Player, GameConstants, TurnUp
 
 
 class World:
+    TRAIN_MODE = False
     DEBUGGING_MODE = False
     LOG_FILE_POINTER = None
     _shortest_path = dict()
