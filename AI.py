@@ -144,6 +144,17 @@ class AI:
                                                enemy_state_for_this_path_,
                                                action_set_maker_,
                                                rand_path]
+            else:
+                action_set_maker_ = self.action_set_maker([])
+                rand_path_number = random.randint(0, len(myself.paths_from_player) - 1)
+                rand_path = myself.paths_from_player[rand_path_number]
+                self_state_for_this_path_ = self.self_state_for_this_path(rand_path)
+                enemy_state_for_this_path_ = self.enemy_state_for_this_path(rand_path)
+                self.last_turn_state_action = [current_turn,
+                                               self_state_for_this_path_,
+                                               enemy_state_for_this_path_,
+                                               action_set_maker_,
+                                               rand_path]
 
 
 
