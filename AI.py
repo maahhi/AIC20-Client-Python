@@ -3,6 +3,7 @@ import random
 from model import *
 from world import World
 import pandas as pd
+import os
 
 
 class AI:
@@ -10,7 +11,7 @@ class AI:
         self.rows = 0
         self.cols = 0
         self.path_for_my_units = None
-        self.table = pd.read_csv('Q_value.csv')
+        self.table = pd.read_csv(os.path.dirname(__file__)+'/Q_value.csv')
         self.last_turn_state_action = None  # 0:turn 1:self 2:enemy 3:action
         self.write_on_table = World.TRAIN_MODE
         self.busy_on_put_unity_list = False
@@ -56,8 +57,22 @@ class AI:
         # The output is a string of set of unit's id
         return str_s
 
-    def reward_computing(self,target_path):
-        return 5
+    def reward_computing(self, target_path: Path, world:World):
+        new_self_sum = 0
+        new_enemy_sum = 0
+        for my_unit in world.get_me().units:
+            if my_unit.path.id == target_path.id:
+                new_self_sum += my_unit.hp
+        for allied_unit in world.get_friend().units:
+            if allied_unit.path.id == target_path.id:
+                new_self_sum += allied_unit.hp
+
+        for enemy_unit in world.get_first_enemy().units + world.get_second_enemy().units:
+            if enemy_unit.path.id == target_path.id:
+                new_enemy_sum += enemy_unit.hp
+
+        reward = (new_self_sum - target_path.sum_of_self_health) - (new_enemy_sum - target_path.sum_of_enemy_health)
+        return reward
 
 
     # it is called every turn for doing process during the game

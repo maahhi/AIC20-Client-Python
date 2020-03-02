@@ -94,6 +94,7 @@ class Controller:
 
 
 if __name__ == '__main__':
+    print(os.path.dirname(__file__))
     c = Controller()
     if len(sys.argv) > 1 and sys.argv[1] == '--verbose':
         World.DEBUGGING_MODE = True

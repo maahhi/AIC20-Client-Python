@@ -280,6 +280,8 @@ class Path:
             self.cells = []
             for cell in path.cells:
                 self.cells.append(cell)
+            self.sum_of_self_health = 0
+            self.sum_of_enemy_health = 0
 
     def __str__(self):
         return "<Path | " \
