@@ -12,7 +12,7 @@ class AI:
         self.path_for_my_units = None
         self.table = pd.read_csv('Q_value.csv')
         self.last_turn_state_action = None  # 0:turn 1:self 2:enemy 3:action
-        self.write_on_table = World.TRAINING_MODE
+        self.write_on_table = World.TRAIN_MODE
 
     # this function is called in the beginning for deck picking and pre process
     def pick(self, world: World):
