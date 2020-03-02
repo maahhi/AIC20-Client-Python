@@ -51,17 +51,26 @@ class AI:
         new_self_sum = 0
         new_enemy_sum = 0
         for my_unit in world.get_me().units:
+            print("She came in through her bathroom window")
+            print("UnitUnit", my_unit.path.id)
+            print("TargetTarget", target_path.id)
+            if my_unit.path is None : continue
             if my_unit.path.id == target_path.id:
                 new_self_sum += my_unit.hp
         for allied_unit in world.get_friend().units:
+            if allied_unit.path is None : continue
             if allied_unit.path.id == target_path.id:
                 new_self_sum += allied_unit.hp
 
         for enemy_unit in world.get_first_enemy().units + world.get_second_enemy().units:
+            if enemy_unit.path is None : continue
             if enemy_unit.path.id == target_path.id:
                 new_enemy_sum += enemy_unit.hp
 
         reward = (new_self_sum - target_path.sum_of_self_health) - (new_enemy_sum - target_path.sum_of_enemy_health)
+        target_path.sum_of_self_health = new_self_sum
+        target_path.sum_of_enemy_health = new_enemy_sum
+        print("reward", reward)
         return reward
 
 
@@ -122,7 +131,7 @@ class AI:
                 action = self.last_turn_state_action[3]
                 target_path = self.last_turn_state_action[4]
                 # return an integer for the reward
-                reward = self.reward_computing(target_path)
+                reward = self.reward_computing(target_path, world)
 
                 index_in_table = \
                 self.table.loc[(self.table['self'] == self_st) & (self.table['enemy'] == enemy_st)].index[0]
