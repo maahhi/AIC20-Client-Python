@@ -43,8 +43,14 @@ class AI:
         return 3
 
     def action_set_maker(self,action_unit_list):
+        s = set()
+        for u in action_unit_list:
+            print('u',u,u.type_id)
+            s.add(u.type_id)
+        str_s = str(tuple(sorted(s)))
+        #print('str_s',str_s)
         # The output is a string of set of unit's id
-        return '()'
+        return str_s
 
     def reward_computing(self,target_path):
         return 5
@@ -126,13 +132,16 @@ class AI:
             if myself.ap == max_ap:
                 rand_put = random.randint(1,len(myself.hand))
                 print('hand len = ',len(myself.hand),'rand_put :',rand_put)
-                action_unit_list = random.sample(range(0,len(myself.hand)),rand_put)
+                action_unit_list_hand_no = random.sample(range(0,len(myself.hand)),rand_put)
                 print('len(myself.paths_from_player):',len(myself.paths_from_player),'myself.paths_from_player[0]',myself.paths_from_player[0])
                 rand_path_number = random.randint(0,len(myself.paths_from_player)-1)
                 rand_path = myself.paths_from_player[rand_path_number]
                 print('rand_path', rand_path, type(rand_path))
-                for i in action_unit_list:
+                print('action_unit_list',action_unit_list_hand_no)
+                action_unit_list = []
+                for i in action_unit_list_hand_no:
                     world.put_unit(base_unit=myself.hand[i], path=rand_path)
+                    action_unit_list.append(myself.hand[i])
                 self_state_for_this_path_ = self.self_state_for_this_path(rand_path)
                 enemy_state_for_this_path_ = self.enemy_state_for_this_path(rand_path)
                 action_set_maker_ = self.action_set_maker(action_unit_list)
