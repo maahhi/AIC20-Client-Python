@@ -12,6 +12,7 @@ class AI:
         self.path_for_my_units = None
         self.table = pd.read_csv('Q_value.csv')
         self.last_turn_state_action = None  # 0:turn 1:self 2:enemy 3:action
+        self.write_on_table = World.TRAINING_MODE
 
     # this function is called in the beginning for deck picking and pre process
     def pick(self, world: World):
@@ -169,6 +170,8 @@ class AI:
     # using this function you can access the result of the game.
     # scores is a map from int to int which the key is player_id and value is player_score
     def end(self, world: World, scores):
+        if not self.write_on_table:
+            self.table.to_csv('Q_value.csv', index=False)
         print("end started!")
         print("My score:", scores[world.get_me().player_id])
 
