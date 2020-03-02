@@ -10,6 +10,8 @@ from model import Message
 from model import ServerConstants
 from network import Network
 from world import World
+import argparse
+
 
 
 class Controller:
@@ -95,4 +97,6 @@ if __name__ == '__main__':
     c = Controller()
     if len(sys.argv) > 1 and sys.argv[1] == '--verbose':
         World.DEBUGGING_MODE = True
+    if "--training" in sys.argv:
+        World.TRAIN_MODE = True
     c.start()
