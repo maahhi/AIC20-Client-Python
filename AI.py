@@ -124,12 +124,9 @@ class AI:
             max_ap = world.get_game_constants().max_ap
             # play all of hand once your ap reaches maximum. if ap runs out, putUnit doesn't do anything
             if myself.ap == max_ap:
-                rand_put = random.randint(0,len(myself.hand))
+                rand_put = random.randint(1,len(myself.hand))
                 print('hand len = ',len(myself.hand),'rand_put :',rand_put)
-                if rand_put == 0:
-                    action_unit_list = []
-                else:
-                    action_unit_list = random.sample(range(0,len(myself.hand)),rand_put)
+                action_unit_list = random.sample(range(0,len(myself.hand)),rand_put)
                 print('len(myself.paths_from_player):',len(myself.paths_from_player),'myself.paths_from_player[0]',myself.paths_from_player[0])
                 rand_path_number = random.randint(0,len(myself.paths_from_player)-1)
                 rand_path = myself.paths_from_player[rand_path_number]
