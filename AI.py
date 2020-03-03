@@ -4,14 +4,16 @@ from model import *
 from world import World
 import pandas as pd
 import os
+from datetime import datetime
 
 
 class AI:
     def __init__(self):
+        print(datetime.now())
         self.rows = 0
         self.cols = 0
         self.path_for_my_units = None
-        self.table = pd.read_csv(os.path.dirname(__file__)+'/Q_value.csv')
+        self.table = pd.read_csv(os.path.dirname(__file__)+'/Q_value3.csv')
         self.last_turn_state_action = None  # 0:turn 1:self 2:enemy 3:action
         self.write_on_table = World.TRAIN_MODE
         self.busy_on_put_unity_list = False
@@ -21,7 +23,6 @@ class AI:
     # this function is called in the beginning for deck picking and pre process
     def pick(self, world: World):
         print("pick started!")
-
         # pre process
         map = world.get_map()
         self.rows = map.row_num
@@ -36,6 +37,8 @@ class AI:
         # other pre process
         self.path_for_my_units = world.get_friend().paths_from_player[0]
         print('self.path_for_my_units : ', self.path_for_my_units , type(self.path_for_my_units))
+        print('pick-timeout',world.get_game_constants().pick_timeout)
+        print('turn-timeout', world.get_game_constants().turn_timeout)
 
 
     def self_state_for_this_path(self,target_path, world:World):
@@ -170,8 +173,7 @@ class AI:
                 # return an integer for the reward
                 reward = self.reward_computing(target_path, world)
 
-                index_in_table = \
-                self.table.loc[(self.table['self'] == self_st) & (self.table['enemy'] == enemy_st)].index[0]
+                index_in_table = self.table.loc[(self.table['self'] == self_st) & (self.table['enemy'] == enemy_st)].index[0]
                 last_Q_value = self.table[action][index_in_table]
                 learining_rate = 0.1
                 discount = 0.95
