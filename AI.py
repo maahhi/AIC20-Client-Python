@@ -38,9 +38,23 @@ class AI:
         world.choose_hand(base_units=my_hand)
         # other pre process
         self.path_for_my_units = world.get_friend().paths_from_player[0]
-        print('self.path_for_my_units : ', self.path_for_my_units , type(self.path_for_my_units))
-        print('pick-timeout',world.get_game_constants().pick_timeout)
-        print('turn-timeout', world.get_game_constants().turn_timeout)
+        #print('self.path_for_my_units : ', self.path_for_my_units , type(self.path_for_my_units))
+        #print('pick-timeout',world.get_game_constants().pick_timeout)
+        #print('turn-timeout', world.get_game_constants().turn_timeout)
+
+        #first hand setting:
+        #   mean of all possible for hand
+        s = {0, 1, 2, 3, 4, 5, 6, 7, 8}
+        s_5 = list(map(str, itertools.combinations(s, 5)))
+        max_value = 0
+        max_value_action = None
+        for action in s_5:
+            if self.table[action].mean > max_value:
+                max_value_action = action
+
+        #TODO:chooseHandById(typeIds: List[int])
+
+
 
 
     def self_state_for_this_path(self,target_path, world:World):
