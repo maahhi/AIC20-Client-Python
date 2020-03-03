@@ -38,9 +38,30 @@ class AI:
         print('self.path_for_my_units : ', self.path_for_my_units , type(self.path_for_my_units))
 
 
-    def self_state_for_this_path(self,target_path):
-        # The output is an integer that represent binary of self heros in this path
-        return 511
+    def self_state_for_this_path(self,target_path, world:World):
+        # The output is an integer that represent binary of self heros type_id in this path
+
+        type_id_bin = ['0' for i in range(9)]
+
+        for my_unit in world.get_me().units:
+            print("UnitUnit---self", my_unit.unit_id)
+
+            #print("TargetTarget", target_path.id)
+            if my_unit.path is None:
+                continue
+            if my_unit.path.id == target_path.id:
+                type_id_bin[my_unit.base_unit.type_id] ='1'
+
+        for allied_unit in world.get_friend().units:
+            if allied_unit.path is None:
+                continue
+            if allied_unit.path.id == target_path.id:
+                type_id_bin[allied_unit.base_unit.type_id] ='1'
+        print('type_id_bin',type_id_bin)
+        type_id_bin_string = "".join(type_id_bin)
+        type_id_decimal = int(type_id_bin_string,2)
+        print(type_id_decimal)
+        return type_id_decimal
 
     def enemy_state_for_this_path(self,target_path):
         # The output is an integer that represent level of enemy in this path
@@ -64,11 +85,13 @@ class AI:
             print("She came in through her bathroom window")
             print("UnitUnit", my_unit.path.id)
             print("TargetTarget", target_path.id)
-            if my_unit.path is None : continue
+            if my_unit.path is None:
+                continue
             if my_unit.path.id == target_path.id:
                 new_self_sum += my_unit.hp
         for allied_unit in world.get_friend().units:
-            if allied_unit.path is None : continue
+            if allied_unit.path is None:
+                continue
             if allied_unit.path.id == target_path.id:
                 new_self_sum += allied_unit.hp
 
@@ -216,7 +239,7 @@ class AI:
                         self.busy_on_put_unity_list = True
                         break
 
-                self_state_for_this_path_ = self.self_state_for_this_path(rand_path)
+                self_state_for_this_path_ = self.self_state_for_this_path(rand_path,world)
                 enemy_state_for_this_path_ = self.enemy_state_for_this_path(rand_path)
                 action_set_maker_ = self.action_set_maker(action_unit_list)
                 self.last_turn_state_action = [current_turn,
@@ -231,7 +254,7 @@ class AI:
                 action_set_maker_ = self.action_set_maker([])
                 rand_path_number = random.randint(0, len(myself.paths_from_player) - 1)
                 rand_path = myself.paths_from_player[rand_path_number]
-                self_state_for_this_path_ = self.self_state_for_this_path(rand_path)
+                self_state_for_this_path_ = self.self_state_for_this_path(rand_path,world)
                 enemy_state_for_this_path_ = self.enemy_state_for_this_path(rand_path)
                 self.last_turn_state_action = [current_turn,
                                                self_state_for_this_path_,
