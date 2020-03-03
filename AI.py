@@ -54,17 +54,21 @@ class AI:
             print("She came in through her bathroom window")
             print("UnitUnit", my_unit.path.id)
             print("TargetTarget", target_path.id)
-            if my_unit.path is None : continue
+            if my_unit.path is None :
+                print("self")
+                continue
             if my_unit.path.id == target_path.id:
                 new_self_sum += my_unit.hp
         for allied_unit in world.get_friend().units:
-            if allied_unit.path is None : continue
+            if allied_unit.path is None :
+                print("allied")
+                continue
             if allied_unit.path.id == target_path.id:
                 new_self_sum += allied_unit.hp
 
         for enemy_unit in world.get_first_enemy().units + world.get_second_enemy().units:
-            if enemy_unit.path is None : continue
-            if enemy_unit.path.id == target_path.id:
+            if enemy_unit.cell in target_path.cells:
+                print("Ay Fuck", type(enemy_unit.cell))
                 new_enemy_sum += enemy_unit.hp
 
         reward = (new_self_sum - target_path.sum_of_self_health) - (new_enemy_sum - target_path.sum_of_enemy_health)
