@@ -41,16 +41,7 @@ class AI:
         my_hand = [base_unit for base_unit in all_base_units if base_unit.is_flying]
 
         # picking the chosen hand - rest of the hand will automatically be filled with random base_units
-        world.choose_hand(base_units=my_hand)
-        # other pre process
-        #
-        self.initialize_strength_value(world)
-        self.path_for_my_units = world.get_friend().paths_from_player[0]
-        #print('self.path_for_my_units : ', self.path_for_my_units , type(self.path_for_my_units))
-        #print('pick-timeout',world.get_game_constants().pick_timeout)
-        #print('turn-timeout', world.get_game_constants().turn_timeout)
-
-        #first hand setting:
+        # first hand setting:
         #   mean of all possible for hand
         s = {0, 1, 2, 3, 4, 5, 6, 7, 8}
         s_5 = list(map(str, itertools.combinations(s, 5)))
@@ -60,7 +51,20 @@ class AI:
             if self.table[action].mean > max_value:
                 max_value_action = action
 
-        #TODO:chooseHandById(typeIds: List[int])
+        units_id_list = []
+        for i in max_value_action:
+            if i.isdigit():
+                units_id_list.append(i)
+        world.chooseHandById(max_value_action)
+        # other pre process
+        #
+        self.initialize_strength_value(world)
+        self.path_for_my_units = world.get_friend().paths_from_player[0]
+        #print('self.path_for_my_units : ', self.path_for_my_units , type(self.path_for_my_units))
+        #print('pick-timeout',world.get_game_constants().pick_timeout)
+        #print('turn-timeout', world.get_game_constants().turn_timeout)
+
+
 
 
 
