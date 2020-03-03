@@ -14,7 +14,7 @@ class AI:
         self.rows = 0
         self.cols = 0
         self.path_for_my_units = None
-        self.table = pd.read_csv(os.path.dirname(__file__)+'/Q_value.csv')
+        self.table = pd.read_csv(os.path.dirname(__file__)+'/Q_value3.csv')
         self.last_turn_state_action = None  # 0:turn 1:self 2:enemy 3:action
         self.write_on_table = World.TRAIN_MODE
         self.busy_on_put_unity_list = False
@@ -44,18 +44,21 @@ class AI:
         # first hand setting:
         #   mean of all possible for hand
         s = {0, 1, 2, 3, 4, 5, 6, 7, 8}
-        s_5 = list(map(str, itertools.combinations(s, 5)))
+        s_5 = ['(0, 1, 2, 3, 4)', '(0, 1, 2, 3, 5)', '(0, 1, 2, 3, 6)', '(0, 1, 2, 3, 7)', '(0, 1, 2, 3, 8)', '(0, 1, 2, 4, 5)', '(0, 1, 2, 4, 6)', '(0, 1, 2, 4, 7)', '(0, 1, 2, 4, 8)', '(0, 1, 2, 5, 6)', '(0, 1, 2, 5, 7)', '(0, 1, 2, 5, 8)', '(0, 1, 2, 6, 7)', '(0, 1, 2, 6, 8)', '(0, 1, 2, 7, 8)', '(0, 1, 3, 4, 5)', '(0, 1, 3, 4, 6)', '(0, 1, 3, 4, 7)', '(0, 1, 3, 4, 8)', '(0, 1, 3, 5, 6)', '(0, 1, 3, 5, 7)', '(0, 1, 3, 5, 8)', '(0, 1, 3, 6, 7)', '(0, 1, 3, 6, 8)', '(0, 1, 3, 7, 8)', '(0, 1, 4, 5, 6)', '(0, 1, 4, 5, 7)', '(0, 1, 4, 5, 8)', '(0, 1, 4, 6, 7)', '(0, 1, 4, 6, 8)', '(0, 1, 4, 7, 8)', '(0, 1, 5, 6, 7)', '(0, 1, 5, 6, 8)', '(0, 1, 5, 7, 8)', '(0, 1, 6, 7, 8)', '(0, 2, 3, 4, 5)', '(0, 2, 3, 4, 6)', '(0, 2, 3, 4, 7)', '(0, 2, 3, 4, 8)', '(0, 2, 3, 5, 6)', '(0, 2, 3, 5, 7)', '(0, 2, 3, 5, 8)', '(0, 2, 3, 6, 7)', '(0, 2, 3, 6, 8)', '(0, 2, 3, 7, 8)', '(0, 2, 4, 5, 6)', '(0, 2, 4, 5, 7)', '(0, 2, 4, 5, 8)', '(0, 2, 4, 6, 7)', '(0, 2, 4, 6, 8)', '(0, 2, 4, 7, 8)', '(0, 2, 5, 6, 7)', '(0, 2, 5, 6, 8)', '(0, 2, 5, 7, 8)', '(0, 2, 6, 7, 8)', '(0, 3, 4, 5, 6)', '(0, 3, 4, 5, 7)', '(0, 3, 4, 5, 8)', '(0, 3, 4, 6, 7)', '(0, 3, 4, 6, 8)', '(0, 3, 4, 7, 8)', '(0, 3, 5, 6, 7)', '(0, 3, 5, 6, 8)', '(0, 3, 5, 7, 8)', '(0, 3, 6, 7, 8)', '(0, 4, 5, 6, 7)', '(0, 4, 5, 6, 8)', '(0, 4, 5, 7, 8)', '(0, 4, 6, 7, 8)', '(0, 5, 6, 7, 8)', '(1, 2, 3, 4, 5)', '(1, 2, 3, 4, 6)', '(1, 2, 3, 4, 7)', '(1, 2, 3, 4, 8)', '(1, 2, 3, 5, 6)', '(1, 2, 3, 5, 7)', '(1, 2, 3, 5, 8)', '(1, 2, 3, 6, 7)', '(1, 2, 3, 6, 8)', '(1, 2, 3, 7, 8)', '(1, 2, 4, 5, 6)', '(1, 2, 4, 5, 7)', '(1, 2, 4, 5, 8)', '(1, 2, 4, 6, 7)', '(1, 2, 4, 6, 8)', '(1, 2, 4, 7, 8)', '(1, 2, 5, 6, 7)', '(1, 2, 5, 6, 8)', '(1, 2, 5, 7, 8)', '(1, 2, 6, 7, 8)', '(1, 3, 4, 5, 6)', '(1, 3, 4, 5, 7)', '(1, 3, 4, 5, 8)', '(1, 3, 4, 6, 7)', '(1, 3, 4, 6, 8)', '(1, 3, 4, 7, 8)', '(1, 3, 5, 6, 7)', '(1, 3, 5, 6, 8)', '(1, 3, 5, 7, 8)', '(1, 3, 6, 7, 8)', '(1, 4, 5, 6, 7)', '(1, 4, 5, 6, 8)', '(1, 4, 5, 7, 8)', '(1, 4, 6, 7, 8)', '(1, 5, 6, 7, 8)', '(2, 3, 4, 5, 6)', '(2, 3, 4, 5, 7)', '(2, 3, 4, 5, 8)', '(2, 3, 4, 6, 7)', '(2, 3, 4, 6, 8)', '(2, 3, 4, 7, 8)', '(2, 3, 5, 6, 7)', '(2, 3, 5, 6, 8)', '(2, 3, 5, 7, 8)', '(2, 3, 6, 7, 8)', '(2, 4, 5, 6, 7)', '(2, 4, 5, 6, 8)', '(2, 4, 5, 7, 8)', '(2, 4, 6, 7, 8)', '(2, 5, 6, 7, 8)', '(3, 4, 5, 6, 7)', '(3, 4, 5, 6, 8)', '(3, 4, 5, 7, 8)', '(3, 4, 6, 7, 8)', '(3, 5, 6, 7, 8)', '(4, 5, 6, 7, 8)']
+
         max_value = 0
         max_value_action = None
         for action in s_5:
-            if self.table[action].mean > max_value:
+            if self.table[action].mean() >= max_value:
                 max_value_action = action
 
         units_id_list = []
         for i in max_value_action:
             if i.isdigit():
                 units_id_list.append(i)
-        world.chooseHandById(max_value_action)
+        print('chooseHandById',units_id_list)
+        world.choose_hand_by_id(units_id_list)
+
         # other pre process
         #
         self.initialize_strength_value(world)
@@ -307,7 +310,6 @@ class AI:
                 # an integer that represent binary of self heros in this path
                 self_st = self.last_turn_state_action[1]
                 # an integer that represent level of enemy in this path
-                # صفر می‌شه زمینی و هوایی ضعیف۱ زمینی قوی هوایی ضیف۲ زمینی ضعیف هوایی قوی۳ هر دو قوی
                 enemy_st = self.last_turn_state_action[2]
                 # a string of set of unit's id
                 action = self.last_turn_state_action[3]
@@ -315,7 +317,9 @@ class AI:
                 # return an integer for the reward
                 reward = self.reward_computing(target_path, world)
 
+                print('self_st',self_st,'enemy_st',enemy_st)
                 index_in_table = self.table.loc[(self.table['self'] == self_st) & (self.table['enemy'] == enemy_st)].index[0]
+                print(action,index_in_table)
                 last_Q_value = self.table[action][index_in_table]
                 learining_rate = 0.1
                 discount = 0.95
@@ -384,7 +388,7 @@ class AI:
                         break
 
                 self_state_for_this_path_ = self.self_state_for_this_path(rand_path,world)
-                enemy_state_for_this_path_ = self.enemy_state_for_this_path(rand_path)
+                enemy_state_for_this_path_ = self.enemy_state_for_this_path(rand_path,world)
                 action_set_maker_ = self.action_set_maker(action_unit_list)
                 self.last_turn_state_action = [current_turn,
                                                self_state_for_this_path_,
@@ -399,7 +403,7 @@ class AI:
                 rand_path_number = random.randint(0, len(myself.paths_from_player) - 1)
                 rand_path = myself.paths_from_player[rand_path_number]
                 self_state_for_this_path_ = self.self_state_for_this_path(rand_path,world)
-                enemy_state_for_this_path_ = self.enemy_state_for_this_path(rand_path)
+                enemy_state_for_this_path_ = self.enemy_state_for_this_path(rand_path,world)
                 self.last_turn_state_action = [current_turn,
                                                self_state_for_this_path_,
                                                enemy_state_for_this_path_,

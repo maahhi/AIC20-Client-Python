@@ -13,7 +13,7 @@ s_5 =list(map(str,itertools.combinations(s, 5)))
 s_0 =list(map(str,itertools.combinations(s, 0)))
 sub_s = s_0+s_1+s_2+s_3+s_4+s_5
 
-enemy_states = 4
+enemy_states = 16
 
 s = [[i for i in range(2**9)] for j in range(enemy_states)]
 self = []
@@ -35,7 +35,7 @@ d2.enemy = enemy
 d2.to_csv('Q_value3.csv',index=False)
 
 #d.loc[(d['self']==1) & (d['enemy']==1)]
-d.loc[(d['self']==0) & (d['enemy']==1)]['()'].index[0]
+d2.loc[(d2['self']==0) & (d2['enemy']==1)]['()'].index[0]
 d._set_value(0,'()',1)
 d['()'][0]
 max(d.loc[0][2:])
@@ -47,6 +47,6 @@ print(datetime.now())
 d.to_csv('Q_value3.csv',index=False)
 print(datetime.now())
 
-d3[['(1,)','()']]
+d2[['(1,)','()']]
 
-d3[['(1,)','()']].idxmax(axis=1)[1]#1 is index
+d2[['(1,)','()']].idxmax(axis=1)[1]#1 is index
