@@ -4,15 +4,26 @@ from model import *
 from world import World
 import pandas as pd
 import os
-
+from datetime import datetime
 
 class AI:
     def __init__(self):
+        print(datetime.now())
         self.rows = 0
         self.cols = 0
         self.path_for_my_units = None
         self.table = pd.read_csv(os.path.dirname(__file__)+'/Q_value.csv')
         self.last_turn_state_action = None  # 0:turn 1:self 2:enemy 3:action
+        self.write_on_table = World.TRAIN_MODE
+        self.busy_on_put_unity_list = False
+        self.put_unity_list = True
+        self.path_counter_for_competition = 0
+
+        self.location_air_strong = 0
+        self.location_ground_strong = 0
+        self.target_air_strong = 0
+        self.target_ground_strong = 0
+
 
     # this function is called in the beginning for deck picking and pre process
     def pick(self, world: World):
@@ -30,10 +41,41 @@ class AI:
         # picking the chosen hand - rest of the hand will automatically be filled with random base_units
         world.choose_hand(base_units=my_hand)
         # other pre process
+        #
+        self.initialize_strength_value(world)
         self.path_for_my_units = world.get_friend().paths_from_player[0]
-        print('self.path_for_my_units : ', self.path_for_my_units , type(self.path_for_my_units))
+        print('self.path_for_my_units : ', self.path_for_my_units, type(self.path_for_my_units))
         print('pick-timeout',world.get_game_constants().pick_timeout)
         print('turn-timeout', world.get_game_constants().turn_timeout)
+
+    def initialize_strength_value(self, world: World):
+        location_ground = 0
+        location_air = 0
+        target_ground = 0
+        target_air = 0
+
+        for unit in world.get_all_base_units():
+            if unit.is_flying:
+                location_air += unit.max_hp
+            else:
+                location_ground += unit.max_hp
+
+            if unit.target_type == UnitTarget.GROUND:
+                target_ground += unit.max_hp * (unit.base_attack**2) * (1+int(unit.is_multiple)) * unit.base_range
+            elif unit.target_type == UnitTarget.AIR:
+                target_air += unit.max_hp * (unit.base_attack**2) * (1+int(unit.is_multiple)) * unit.base_range
+            else:
+                target_ground += unit.max_hp * (unit.base_attack ** 2) * (1 + int(unit.is_multiple)) * unit.base_range
+                target_air += unit.max_hp * (unit.base_attack ** 2) * (1 + int(unit.is_multiple)) * unit.base_range
+
+        self.location_air_strong = location_air // 2
+        self.location_ground_strong = location_ground // 2
+        self.target_air_strong = target_air // 2
+        self.target_ground_strong = target_ground // 2
+
+        print(self.target_ground_strong, self.target_air_strong, self.location_ground_strong, self.location_air_strong)
+
+
 
 
     def self_state_for_this_path(self,target_path, world:World):
@@ -61,12 +103,39 @@ class AI:
         print(type_id_decimal)
         return type_id_decimal
 
-    def enemy_state_for_this_path(self,target_path):
-        # The output is an integer that represent level of enemy in this path
-        # صفر می‌شه زمینی و هوایی ضعیف۱ زمینی قوی هوایی ضیف۲ زمینی ضعیف هوایی قوی۳ هر دو قوی
-        return 3
+    def enemy_state_for_this_path(self, target_path, world : World):
+        location_ground = 0
+        location_air = 0
+        target_ground = 0
+        target_air = 0
+        ret_val = 0
 
-    def action_set_maker(self,action_unit_list):
+        for unit in world.get_first_enemy().units + world.get_second_enemy().units:
+            if unit.cell not in target_path.cells: continue
+            if unit.base_unit.is_flying:
+                location_air += unit.hp
+            else:
+                location_ground += unit.hp
+
+            if unit.base_unit.target_type == UnitTarget.GROUND:
+                target_ground += unit.hp * (unit.base_unit.base_attack**2) * (1+int(unit.base_unit.is_multiple)) * unit.base_unit.base_attack
+            elif unit.base_unit.target_type == UnitTarget.AIR:
+                target_air += unit.hp * (unit.base_unit.base_attack**2) * (1+int(unit.base_unit.is_multiple)) * unit.base_unit.base_attack
+            else:
+                target_ground += unit.hp * (unit.base_unit.base_attack**2) * (1+int(unit.base_unit.is_multiple)) * unit.base_unit.base_attack
+                target_air += unit.hp * (unit.base_unit.base_attack**2) * (1+int(unit.base_unit.is_multiple)) * unit.base_unit.base_attack
+        if target_ground > self.target_ground_strong:
+            ret_val += 1
+        if target_air > self.location_air_strong:
+            ret_val += 2
+        if location_ground > self.location_ground_strong:
+            ret_val += 4
+        if location_ground > self.location_air_strong:
+            ret_val += 8
+
+        return ret_val
+
+    def action_set_maker(self, action_unit_list):
         s = set()
         for u in action_unit_list:
             #print('u',u,u.type_id)
