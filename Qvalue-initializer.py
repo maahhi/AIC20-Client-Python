@@ -46,3 +46,7 @@ d2.to_csv('Q_value3.csv',index=False)
 print(datetime.now())
 d.to_csv('Q_value3.csv',index=False)
 print(datetime.now())
+
+d3[['(1,)','()']]
+
+d3[['(1,)','()']].idxmax(axis=1)[1]#1 is index
