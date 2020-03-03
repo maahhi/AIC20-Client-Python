@@ -5,6 +5,7 @@ from world import World
 import pandas as pd
 import os
 from datetime import datetime
+import itertools
 
 
 class AI:
@@ -18,6 +19,7 @@ class AI:
         self.write_on_table = World.TRAIN_MODE
         self.busy_on_put_unity_list = False
         self.put_unity_list = True
+        self.path_counter_for_competition = 0
 
 
     # this function is called in the beginning for deck picking and pre process
@@ -119,10 +121,66 @@ class AI:
         if Competition:
             myself = world.get_me()
             max_ap = world.get_game_constants().max_ap
-            # play all of hand once your ap reaches maximum. if ap runs out, putUnit doesn't do anything
-            if myself.ap == max_ap:
+
+            if self.busy_on_put_unity_list != True:
+                #which path do you like to play in ?
+                self.path_counter_for_competition+=1
+                if self.path_counter_for_competition == len(myself.paths_from_player):
+                    self.path_counter_for_competition = 0
+                current_path = myself.paths_from_player[self.path_counter_for_competition]
+
+                # what is current state?
+                current_self_state = self.self_state_for_this_path(current_path,world)
+                current_enemy_state = self.enemy_state_for_this_path(current_path,world)
+
+                #check all actions can be done by this hand
+                current_hand = set()
                 for base_unit in myself.hand:
-                    world.put_unit(base_unit=base_unit, path=self.path_for_my_units)
+                    current_hand.add(base_unit.type_id)
+
+                s_2 = list(map(str, itertools.combinations(current_hand, 2)))
+                s_1 = list(map(str, itertools.combinations(current_hand, 1)))
+                s_3 = list(map(str, itertools.combinations(current_hand, 3)))
+                s_4 = list(map(str, itertools.combinations(current_hand, 4)))
+                s_5 = list(map(str, itertools.combinations(current_hand, 5)))
+                s_0 = list(map(str, itertools.combinations(current_hand, 0)))
+                sub_s = s_0 + s_1 + s_2 + s_3 + s_4 + s_5
+
+                # what is best action for this state ?
+                index_in_table = self.table.loc[(self.table['self'] == current_self_state) & (self.table['enemy'] == current_enemy_state)].index[0]
+                best_action = self.table[sub_s].idxmax(axis=1)[index_in_table]
+
+                self.last_turn_state_action = [current_turn,
+                                               current_self_state,
+                                               current_enemy_state,
+                                               best_action,
+                                               current_path]
+
+                # do the action
+                units_id_list = []
+                if best_action != '()':
+                    for i in best_action:
+                        if i.isdigit():
+                            units_id_list.append(i)
+                    self.busy_on_put_unity_list = True
+                    units_id_list.sort(key=lambda x: x.max_hp)
+                    self.put_unity_list = units_id_list.copy()
+
+
+            if self.busy_on_put_unity_list:
+                this_turn_ap = myself.ap
+                rand_path = self.last_turn_state_action[4]
+                while len(self.put_unity_list) > 0:
+                    if this_turn_ap >= self.put_unity_list[-1].ap:
+                        this_turn_ap -= self.put_unity_list[-1].ap
+                        print('----put unit', self.put_unity_list[-1].type_id)
+                        world.put_unit(base_unit=self.put_unity_list.pop(), path=rand_path)
+                    else:
+                        break
+                if len(self.put_unity_list) == 0:
+                    self.busy_on_put_unity_list = False
+                    self.put_unity_list = []
+
 
             # this code tries to cast the received spell
             received_spell = world.get_received_spell()
