@@ -10,12 +10,13 @@ import itertools
 
 class AI:
     def __init__(self):
-        print(datetime.now())
+
         self.rows = 0
         self.cols = 0
         self.path_for_my_units = None
-        self.table = pd.read_csv(os.path.dirname(__file__)+'/Q_value3.csv')
+        self.table = pd.read_csv(os.path.dirname(__file__)+'/Q_value4.csv')
         self.last_turn_state_action = None  # 0:turn 1:self 2:enemy 3:action
+        print('World.TRAIN_MODE',World.TRAIN_MODE)
         self.write_on_table = World.TRAIN_MODE
         self.busy_on_put_unity_list = False
         self.put_unity_list = True
@@ -35,10 +36,6 @@ class AI:
         map = world.get_map()
         self.rows = map.row_num
         self.cols = map.col_num
-
-        # choosing all flying units
-        all_base_units = world.get_all_base_units()
-        my_hand = [base_unit for base_unit in all_base_units if base_unit.is_flying]
 
         # picking the chosen hand - rest of the hand will automatically be filled with random base_units
         # first hand setting:
@@ -67,10 +64,6 @@ class AI:
         #print('pick-timeout',world.get_game_constants().pick_timeout)
         #print('turn-timeout', world.get_game_constants().turn_timeout)
 
-
-
-
-
     def initialize_strength_value(self, world: World):
         location_ground = 0
         location_air = 0
@@ -95,10 +88,7 @@ class AI:
         self.location_ground_strong = location_ground // 2
         self.target_air_strong = target_air // 2
         self.target_ground_strong = target_ground // 2
-
-        print(self.target_ground_strong, self.target_air_strong, self.location_ground_strong, self.location_air_strong)
-
-
+        #print(self.target_ground_strong, self.target_air_strong, self.location_ground_strong, self.location_air_strong)
 
 
     def self_state_for_this_path(self,target_path, world:World):
@@ -107,7 +97,7 @@ class AI:
         type_id_bin = ['0' for i in range(9)]
 
         for my_unit in world.get_me().units:
-            print("UnitUnit---self", my_unit.unit_id)
+            #print("UnitUnit---self", my_unit.unit_id)
 
             #print("TargetTarget", target_path.id)
             if my_unit.path is None:
@@ -120,10 +110,10 @@ class AI:
                 continue
             if allied_unit.path.id == target_path.id:
                 type_id_bin[allied_unit.base_unit.type_id] ='1'
-        print('type_id_bin',type_id_bin)
+        #print('type_id_bin',type_id_bin)
         type_id_bin_string = "".join(type_id_bin)
         type_id_decimal = int(type_id_bin_string,2)
-        print(type_id_decimal)
+        #print(type_id_decimal)
         return type_id_decimal
 
     def enemy_state_for_this_path(self, target_path, world : World):
@@ -172,30 +162,30 @@ class AI:
         new_self_sum = 0
         new_enemy_sum = 0
         for my_unit in world.get_me().units:
-            print("She came in through her bathroom window")
-            print("UnitUnit", my_unit.path.id)
-            print("TargetTarget", target_path.id)
+            #print("She came in through her bathroom window")
+            #print("UnitUnit", my_unit.path.id)
+            #print("TargetTarget", target_path.id)
             if my_unit.path is None :
-                print("self")
+                #print("self")
                 continue
             if my_unit.path.id == target_path.id:
                 new_self_sum += my_unit.hp
         for allied_unit in world.get_friend().units:
             if allied_unit.path is None :
-                print("allied")
+                #print("allied")
                 continue
             if allied_unit.path.id == target_path.id:
                 new_self_sum += allied_unit.hp
 
         for enemy_unit in world.get_first_enemy().units + world.get_second_enemy().units:
             if enemy_unit.cell in target_path.cells:
-                print("Ay Fuck", type(enemy_unit.cell))
+                #print("Ay Fuck", type(enemy_unit.cell))
                 new_enemy_sum += enemy_unit.hp
 
         reward = (new_self_sum - target_path.sum_of_self_health) - (new_enemy_sum - target_path.sum_of_enemy_health)
         target_path.sum_of_self_health = new_self_sum
         target_path.sum_of_enemy_health = new_enemy_sum
-        print("reward", reward)
+        #print("reward", reward)
         return reward
 
 
@@ -301,33 +291,32 @@ class AI:
                 world.upgrade_unit_damage(unit=unit)
                 world.upgrade_unit_range(unit=unit)
 
-
         else: #training
 
             # update table
             if (self.last_turn_state_action is not None) and (not self.busy_on_put_unity_list):
                 print('++Update Table++')
-                # an integer that represent binary of self heros in this path
+
                 self_st = self.last_turn_state_action[1]
-                # an integer that represent level of enemy in this path
                 enemy_st = self.last_turn_state_action[2]
-                # a string of set of unit's id
                 action = self.last_turn_state_action[3]
                 target_path = self.last_turn_state_action[4]
                 # return an integer for the reward
-                reward = self.reward_computing(target_path, world)
 
-                print('self_st',self_st,'enemy_st',enemy_st)
+                reward = self.reward_computing(target_path, world)
+                print('reward for',self.last_turn_state_action,'is',reward)
+
                 index_in_table = self.table.loc[(self.table['self'] == self_st) & (self.table['enemy'] == enemy_st)].index[0]
-                print(action,index_in_table)
+                #print(action,index_in_table)
+
                 last_Q_value = self.table[action][index_in_table]
                 learining_rate = 0.1
                 discount = 0.95
                 max_Q_state = max(self.table.loc[index_in_table][2:])
                 Q_value = last_Q_value + learining_rate * (reward + discount * max_Q_state - last_Q_value)
                 self.table._set_value(index_in_table, action, Q_value)
-                print('last turn state action turn number',self.last_turn_state_action[0])
-                last_turn_state_action = None
+                #print('last turn state action turn number',self.last_turn_state_action[0])
+                self.last_turn_state_action = None
 
             myself = world.get_me()
             max_ap = world.get_game_constants().max_ap
@@ -418,8 +407,12 @@ class AI:
     # using this function you can access the result of the game.
     # scores is a map from int to int which the key is player_id and value is player_score
     def end(self, world: World, scores):
-        if not self.write_on_table:
-            self.table.to_csv('Q_value.csv', index=False)
         print("end started!")
+        print(self.table)
+        if self.write_on_table:
+            self.table.to_csv('Q_value4.csv', index=False)
+            new_table = pd.read_csv('Q_value4.csv')
+            print('correctness in saving',new_table.equals(self.table))
+
         print("My score:", scores[world.get_me().player_id])
 

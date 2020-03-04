@@ -95,9 +95,11 @@ class Controller:
 
 if __name__ == '__main__':
     print(os.path.dirname(__file__))
+    if "--training" in sys.argv:
+        World.TRAIN_MODE = True
+        print('control : World.TRAIN_MODE',World.TRAIN_MODE)
     c = Controller()
     if len(sys.argv) > 1 and sys.argv[1] == '--verbose':
         World.DEBUGGING_MODE = True
-    if "--training" in sys.argv:
-        World.TRAIN_MODE = True
+
     c.start()
