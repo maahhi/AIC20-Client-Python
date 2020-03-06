@@ -14,7 +14,7 @@ class AI:
         self.rows = 0
         self.cols = 0
         self.path_for_my_units = None
-        self.table = pd.read_csv(os.path.dirname(__file__)+'/Q_value4.csv')
+        self.table = None
         self.last_turn_state_action = None  # 0:turn 1:self 2:enemy 3:action
         print('World.TRAIN_MODE',World.TRAIN_MODE)
         self.write_on_table = World.TRAIN_MODE
@@ -31,6 +31,7 @@ class AI:
     # this function is called in the beginning for deck picking and pre process
     def pick(self, world: World):
         print("pick started!")
+        self.table = pd.read_csv(os.path.dirname(__file__)+'/Q_value4.csv')
 
         # pre process
         map = world.get_map()
@@ -40,7 +41,7 @@ class AI:
         # picking the chosen hand - rest of the hand will automatically be filled with random base_units
         # first hand setting:
         #   mean of all possible for hand
-        s = {0, 1, 2, 3, 4, 5, 6, 7, 8}
+
         s_5 = ['(0, 1, 2, 3, 4)', '(0, 1, 2, 3, 5)', '(0, 1, 2, 3, 6)', '(0, 1, 2, 3, 7)', '(0, 1, 2, 3, 8)', '(0, 1, 2, 4, 5)', '(0, 1, 2, 4, 6)', '(0, 1, 2, 4, 7)', '(0, 1, 2, 4, 8)', '(0, 1, 2, 5, 6)', '(0, 1, 2, 5, 7)', '(0, 1, 2, 5, 8)', '(0, 1, 2, 6, 7)', '(0, 1, 2, 6, 8)', '(0, 1, 2, 7, 8)', '(0, 1, 3, 4, 5)', '(0, 1, 3, 4, 6)', '(0, 1, 3, 4, 7)', '(0, 1, 3, 4, 8)', '(0, 1, 3, 5, 6)', '(0, 1, 3, 5, 7)', '(0, 1, 3, 5, 8)', '(0, 1, 3, 6, 7)', '(0, 1, 3, 6, 8)', '(0, 1, 3, 7, 8)', '(0, 1, 4, 5, 6)', '(0, 1, 4, 5, 7)', '(0, 1, 4, 5, 8)', '(0, 1, 4, 6, 7)', '(0, 1, 4, 6, 8)', '(0, 1, 4, 7, 8)', '(0, 1, 5, 6, 7)', '(0, 1, 5, 6, 8)', '(0, 1, 5, 7, 8)', '(0, 1, 6, 7, 8)', '(0, 2, 3, 4, 5)', '(0, 2, 3, 4, 6)', '(0, 2, 3, 4, 7)', '(0, 2, 3, 4, 8)', '(0, 2, 3, 5, 6)', '(0, 2, 3, 5, 7)', '(0, 2, 3, 5, 8)', '(0, 2, 3, 6, 7)', '(0, 2, 3, 6, 8)', '(0, 2, 3, 7, 8)', '(0, 2, 4, 5, 6)', '(0, 2, 4, 5, 7)', '(0, 2, 4, 5, 8)', '(0, 2, 4, 6, 7)', '(0, 2, 4, 6, 8)', '(0, 2, 4, 7, 8)', '(0, 2, 5, 6, 7)', '(0, 2, 5, 6, 8)', '(0, 2, 5, 7, 8)', '(0, 2, 6, 7, 8)', '(0, 3, 4, 5, 6)', '(0, 3, 4, 5, 7)', '(0, 3, 4, 5, 8)', '(0, 3, 4, 6, 7)', '(0, 3, 4, 6, 8)', '(0, 3, 4, 7, 8)', '(0, 3, 5, 6, 7)', '(0, 3, 5, 6, 8)', '(0, 3, 5, 7, 8)', '(0, 3, 6, 7, 8)', '(0, 4, 5, 6, 7)', '(0, 4, 5, 6, 8)', '(0, 4, 5, 7, 8)', '(0, 4, 6, 7, 8)', '(0, 5, 6, 7, 8)', '(1, 2, 3, 4, 5)', '(1, 2, 3, 4, 6)', '(1, 2, 3, 4, 7)', '(1, 2, 3, 4, 8)', '(1, 2, 3, 5, 6)', '(1, 2, 3, 5, 7)', '(1, 2, 3, 5, 8)', '(1, 2, 3, 6, 7)', '(1, 2, 3, 6, 8)', '(1, 2, 3, 7, 8)', '(1, 2, 4, 5, 6)', '(1, 2, 4, 5, 7)', '(1, 2, 4, 5, 8)', '(1, 2, 4, 6, 7)', '(1, 2, 4, 6, 8)', '(1, 2, 4, 7, 8)', '(1, 2, 5, 6, 7)', '(1, 2, 5, 6, 8)', '(1, 2, 5, 7, 8)', '(1, 2, 6, 7, 8)', '(1, 3, 4, 5, 6)', '(1, 3, 4, 5, 7)', '(1, 3, 4, 5, 8)', '(1, 3, 4, 6, 7)', '(1, 3, 4, 6, 8)', '(1, 3, 4, 7, 8)', '(1, 3, 5, 6, 7)', '(1, 3, 5, 6, 8)', '(1, 3, 5, 7, 8)', '(1, 3, 6, 7, 8)', '(1, 4, 5, 6, 7)', '(1, 4, 5, 6, 8)', '(1, 4, 5, 7, 8)', '(1, 4, 6, 7, 8)', '(1, 5, 6, 7, 8)', '(2, 3, 4, 5, 6)', '(2, 3, 4, 5, 7)', '(2, 3, 4, 5, 8)', '(2, 3, 4, 6, 7)', '(2, 3, 4, 6, 8)', '(2, 3, 4, 7, 8)', '(2, 3, 5, 6, 7)', '(2, 3, 5, 6, 8)', '(2, 3, 5, 7, 8)', '(2, 3, 6, 7, 8)', '(2, 4, 5, 6, 7)', '(2, 4, 5, 6, 8)', '(2, 4, 5, 7, 8)', '(2, 4, 6, 7, 8)', '(2, 5, 6, 7, 8)', '(3, 4, 5, 6, 7)', '(3, 4, 5, 6, 8)', '(3, 4, 5, 7, 8)', '(3, 4, 6, 7, 8)', '(3, 5, 6, 7, 8)', '(4, 5, 6, 7, 8)']
 
         max_value = 0
@@ -53,13 +54,14 @@ class AI:
         for i in max_value_action:
             if i.isdigit():
                 units_id_list.append(i)
+
         print('chooseHandById',units_id_list)
         world.choose_hand_by_id(units_id_list)
 
         # other pre process
         #
         self.initialize_strength_value(world)
-        self.path_for_my_units = world.get_friend().paths_from_player[0]
+        #self.path_for_my_units = world.get_friend().paths_from_player[0]
         #print('self.path_for_my_units : ', self.path_for_my_units , type(self.path_for_my_units))
         #print('pick-timeout',world.get_game_constants().pick_timeout)
         #print('turn-timeout', world.get_game_constants().turn_timeout)
@@ -75,7 +77,6 @@ class AI:
                 location_air += unit.max_hp
             else:
                 location_ground += unit.max_hp
-
             if unit.target_type == UnitTarget.GROUND:
                 target_ground += unit.max_hp * (unit.base_attack**2) * (1+int(unit.is_multiple)) * unit.base_range
             elif unit.target_type == UnitTarget.AIR:
