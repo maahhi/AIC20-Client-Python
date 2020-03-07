@@ -200,11 +200,13 @@ class AI:
             max_ap = world.get_game_constants().max_ap
 
             if self.busy_on_put_unity_list != True:
+                print("new path for play")
                 #which path do you like to play in ?
                 self.path_counter_for_competition+=1
                 if self.path_counter_for_competition == len(myself.paths_from_player):
                     self.path_counter_for_competition = 0
                 current_path = myself.paths_from_player[self.path_counter_for_competition]
+                print(current_path.id)
 
                 # what is current state?
                 current_self_state = self.self_state_for_this_path(current_path,world)
@@ -226,6 +228,7 @@ class AI:
                 # what is best action for this state ?
                 index_in_table = self.table.loc[(self.table['self'] == current_self_state) & (self.table['enemy'] == current_enemy_state)].index[0]
                 best_action = self.table[sub_s].idxmax(axis=1)[index_in_table]
+                print('best_action',best_action)
 
                 self.last_turn_state_action = [current_turn,
                                                current_self_state,
@@ -234,33 +237,46 @@ class AI:
                                                current_path]
 
                 # do the action
+
                 units_id_list = []
                 if best_action != '()':
                     for i in best_action:
                         if i.isdigit():
-                            units_id_list.append(i)
+                            units_id_list.append(int(i))
+                    print('units_id_list',units_id_list)
                     self.busy_on_put_unity_list = True
+
                     all_base_units = world.get_all_base_units()
+                    #print('all_base_units', all_base_units)
                     all_base_units.sort(key=lambda x: x.max_hp)
-                    units_id_list_sorted = []
+                    print('all_base_units', all_base_units)
+
+                    base_unit_list = []
                     for x in all_base_units:
                         if x.type_id in units_id_list:
-                            units_id_list_sorted.append(x.type_id)
-
-                    self.put_unity_list = units_id_list_sorted.copy()
+                            base_unit_list.append(x)
+                    print('set the put unit list =',base_unit_list)
+                    self.put_unity_list = base_unit_list.copy()
 
 
             if self.busy_on_put_unity_list:
+                print('busy on put')
                 this_turn_ap = myself.ap
                 rand_path = self.last_turn_state_action[4]
+                print('put unit list len',len(self.put_unity_list))
                 while len(self.put_unity_list) > 0:
+                    print('this_turn_ap',this_turn_ap)
                     if this_turn_ap >= self.put_unity_list[-1].ap:
                         this_turn_ap -= self.put_unity_list[-1].ap
                         print('----put unit', self.put_unity_list[-1].type_id)
                         world.put_unit(base_unit=self.put_unity_list.pop(), path=rand_path)
+
                     else:
+                        print('not enough ap')
                         break
+
                 if len(self.put_unity_list) == 0:
+                    print('end of ')
                     self.busy_on_put_unity_list = False
                     self.put_unity_list = []
 
