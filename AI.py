@@ -182,7 +182,6 @@ class AI:
             if enemy_unit.cell in target_path.cells:
                 #print("Ay Fuck", type(enemy_unit.cell))
                 new_enemy_sum += enemy_unit.hp
-
         reward = (new_self_sum - target_path.sum_of_self_health) - (new_enemy_sum - target_path.sum_of_enemy_health)
         target_path.sum_of_self_health = new_self_sum
         target_path.sum_of_enemy_health = new_enemy_sum
@@ -192,7 +191,7 @@ class AI:
 
     # it is called every turn for doing process during the game
     def turn(self, world: World):
-        Competition = False
+        Competition =True
         current_turn = world.get_current_turn()
         print("turn started:", current_turn)
 
@@ -241,8 +240,14 @@ class AI:
                         if i.isdigit():
                             units_id_list.append(i)
                     self.busy_on_put_unity_list = True
-                    units_id_list.sort(key=lambda x: x.max_hp)
-                    self.put_unity_list = units_id_list.copy()
+                    all_base_units = world.get_all_base_units()
+                    all_base_units.sort(key=lambda x: x.max_hp)
+                    units_id_list_sorted = []
+                    for x in all_base_units:
+                        if x.type_id in units_id_list:
+                            units_id_list_sorted.append(x.type_id)
+
+                    self.put_unity_list = units_id_list_sorted.copy()
 
 
             if self.busy_on_put_unity_list:
