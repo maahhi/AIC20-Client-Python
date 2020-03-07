@@ -31,7 +31,7 @@ class AI:
     # this function is called in the beginning for deck picking and pre process
     def pick(self, world: World):
         print("pick started!")
-        self.table = pd.read_csv(os.path.dirname(__file__)+'/Q_value4.csv')
+        self.table = pd.read_csv(os.path.dirname(__file__)+'/Q_value.csv')
 
         # pre process
         map = world.get_map()
@@ -411,8 +411,8 @@ class AI:
         print("end started!")
         print(self.table)
         if self.write_on_table:
-            self.table.to_csv('Q_value4.csv', index=False)
-            new_table = pd.read_csv('Q_value4.csv')
+            self.table.to_csv(os.path.dirname(__file__)+'/Q_value.csv', index=False)
+            new_table = pd.read_csv(os.path.dirname(__file__)+'/Q_value.csv')
             print('correctness in saving',new_table.equals(self.table))
 
         print("My score:", scores[world.get_me().player_id])
