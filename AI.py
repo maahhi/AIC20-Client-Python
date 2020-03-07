@@ -53,7 +53,7 @@ class AI:
         units_id_list = []
         for i in max_value_action:
             if i.isdigit():
-                units_id_list.append(i)
+                units_id_list.append(int(i))
 
         print('chooseHandById',units_id_list)
         world.choose_hand_by_id(units_id_list)
@@ -246,24 +246,34 @@ class AI:
                     print('units_id_list',units_id_list)
                     self.busy_on_put_unity_list = True
 
+
+                    goooooooz = []
+                    for bu in myself.hand:
+                        if bu.type_id in units_id_list:
+                            goooooooz.append(bu)
+
+                    goooooooz.sort(key=lambda x: x.max_hp)
+                    '''
                     all_base_units = world.get_all_base_units()
                     #print('all_base_units', all_base_units)
                     all_base_units.sort(key=lambda x: x.max_hp)
-                    print('all_base_units', all_base_units)
+                    #print('all_base_units', all_base_units)
 
                     base_unit_list = []
                     for x in all_base_units:
                         if x.type_id in units_id_list:
                             base_unit_list.append(x)
-                    print('set the put unit list =',base_unit_list)
-                    self.put_unity_list = base_unit_list.copy()
+                    '''
+
+                    print('set the put unit list =',goooooooz)
+                    self.put_unity_list = goooooooz.copy()
 
 
             if self.busy_on_put_unity_list:
                 print('busy on put')
                 this_turn_ap = myself.ap
                 rand_path = self.last_turn_state_action[4]
-                print('put unit list len',len(self.put_unity_list))
+                print('put unit list len',self.put_unity_list,len(self.put_unity_list))
                 while len(self.put_unity_list) > 0:
                     print('this_turn_ap',this_turn_ap)
                     if this_turn_ap >= self.put_unity_list[-1].ap:
